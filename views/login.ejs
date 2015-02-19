@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="/css/base.css"/>
+    <script src="/angular/angular.js"></script>
+    <script src="/angular-route/angular-route.js"></script>
+    <script>
+        angular.module('myApp',['ngRoute']).config(function($routeProvider){
+            $routeProvider.when('/',{
+                templateUrl: '/partials/register_login.html',
+                controller: 'myController'
+            }).when('/home',{
+                templateUrl: '/partials/home.html',
+                controller: 'homeController'
+            }).otherwise({
+                redirectTo: '/'
+            });
+        }).controller('myController',function($scope,HTTP,$location){
+            $scope.message = "hello world!";
+            $scope.createAccount = function(reg){
+                HTTP.Register(reg.username,reg.password).then(function(data) {
+                    console.log('registered ' + data.registered);
+                    console.log(reg.username + ',' + reg.password);
+                    $location.path('/home');
+                });
+            }
+            $scope.signIn = function(log){
+                console.log(log.username +','+log.password);
+                HTTP.Login(log.username,log.password).then(function(data){
+                    if(data.loggedIn=='online'){
+                        $location.path('/home');
+                    }
+                });
+            }
+        }).controller('homeController',function($scope,HTTP,$http,$location){
+            $scope.welcome = 'welcome';
+            console.log('logout');
+            $http.get('/login/home').success(function(data){
+               if(data.status == 'online'){
+                   $location.path('/home');
+               }
+                else{
+                   $location.path('/');
+               }
+            });
+            $scope.logout = function(){
+                HTTP.LogOut();
+            };
+        }).factory('HTTP',function($http,$q,$location){
+            return{
+                Register: function(uname,pword){
+                    var deferred = $q.defer();
+                    $http.post('/login/register',{username: uname,password: pword}).success(function(data){
+                        deferred.resolve({
+                            registered: data.message,
+                            user: data.user
+                        });
+                    }).error(function(msg){
+                        deferred.reject(msg);
+                    });
+                    return deferred.promise;
+                },
+                Login: function(uname,pword){
+                    var deferred = $q.defer();
+                    $http.post('/login',{username: uname,password: pword}).success(function(data) {
+                        console.log('success ' + data.message);
+                        deferred.resolve({
+                            loggedIn: data.status,
+                            user: data.user
+                        });
+                    }).error(function(msg){
+                            deferred.reject(msg);
+                        });
+                    return deferred.promise;
+                },
+                LogOut: function(){
+                    $http.get('/login/logout').success(function(data){
+                       console.log('loggedout');
+                        if(data.status =='offline'){
+                            $location.path('/');
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <div ng-view></div>
+</body>
+</html>
