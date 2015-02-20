@@ -11,6 +11,7 @@ var login = require('./routes/login');
 var mongoose = require('mongoose');
 var passport = require('passport');
 var session = require('express-session');
+var cookieSession = require('cookie-session');
 var LocalStrategy = require('passport-local').Strategy;
 var app = express();
 
@@ -23,13 +24,14 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(session({secret: 'something'}));
+app.use(cookieParser('something'));
+//app.use(cookieSession({cookie: {maxAge: 3600000 },secret: 'SUPERsekret'}));
+app.use(session({cookie: {maxAge: 3600000 },secret: 'something'}));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'bower_components')));
 
-app.use(passport.initialize());
-app.use(passport.session());
 
 
 var Customer = require('./model/customers');
