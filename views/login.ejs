@@ -17,8 +17,13 @@
             }).otherwise({
                 redirectTo: '/'
             });
-        }).controller('myController',function($scope,HTTP,$location){
+        }).controller('myController',function($scope,HTTP,$location,$http){
             $scope.message = "hello world!";
+            $http.get('/login/validate').success(function(data){
+                if(data.status =='online'){
+                    $location.path('/home');
+                }
+            });
             $scope.createAccount = function(reg){
                 HTTP.Register(reg.username,reg.password).then(function(data) {
                     console.log('registered ' + data.registered);
@@ -35,8 +40,6 @@
                 });
             }
         }).controller('homeController',function($scope,HTTP,$http,$location){
-            $scope.welcome = 'welcome';
-            console.log('logout');
             $http.get('/login/home').success(function(data){
                if(data.status == 'online'){
                    $location.path('/home');
